@@ -10,7 +10,12 @@
 
 ### How to generate random number to select winner?
 We use the following function:
-``
+```
+function random() private view returns(uint) {
+    // Below function generates pseudorandom uint based on admin and block.timestamp
+    return uint(keccak256(abi.encodePacked(admin, block.timestamp)));
+}
+```
 The function keccak256 takes an input and returns a 256-bit hash. In this case, the input is the concatenation of two values: admin, which is an address type variable, and block.timestamp, which is a uint256 variable representing the timestamp of the current block.
 
 The abi.encodePacked function takes any number of arguments and returns a tightly packed byte array with the values of those arguments. In this case, it packs the admin address and the block.timestamp uint256 value together.
