@@ -7,7 +7,8 @@ contract Crowdfunding {
         address creator;
         uint totalAsk;
         uint amountRaised;
-        bool isOpen;
+        bool fundingCompleted;
+        bool fundsWithdrawn;
     }
 
     Project[] public projects;
@@ -19,8 +20,6 @@ contract Crowdfunding {
         Project memory newProject;
         newProject.creator = msg.sender;
         newProject.totalAsk = amount;
-        newProject.amountRaised = 0;
-        newProject.isOpen = true;
         
         projects.push(newProject);
     }
@@ -35,10 +34,10 @@ contract Crowdfunding {
         }
 
         targetProject.amountRaised += msg.value;
-        contributions[projects.length][msg.sender] += msg.value;
+        contributions[projectIndex][msg.sender] += msg.value;
 
         if (targetProject.amountRaised >= targetProject.totalAsk) {
-            targetProject.isOpen = false;
+            targetProject.fundingCompleted = true;
         }
     }
 
@@ -46,7 +45,7 @@ contract Crowdfunding {
         require(projectIndex < projects.length, "Proposal does not exist");
         Project storage targetProject = projects[projectIndex];
 
-        if (targetProject.isOpen == true || 
+        if (targetProject.fundingCompleted == true || 
             targetProject.amountRaised >= targetProject.totalAsk) {
             revert("Withdraw not allowed");
         }
@@ -54,9 +53,29 @@ contract Crowdfunding {
         uint withdrawAmount = contributions[projectIndex][msg.sender];
         require(withdrawAmount > 0, "Nothing to withdraw");
 
+        targetProject.amountRaised -= withdrawAmount;
         contributions[projectIndex][msg.sender] = 0;
 
         (bool sent, ) = msg.sender.call{value: withdrawAmount}("");
+        require(sent, "Failed to withdraw Ether");
+    }
+
+    function withdrawFunds(uint projectIndex) public {
+        require(projectIndex < projects.length, "Proposal does not exist");
+        Project storage targetProject = projects[projectIndex];
+
+        if (targetProject.fundingCompleted == false || 
+            targetProject.amountRaised < targetProject.totalAsk) {
+            revert("Withdraw not allowed");
+        }
+
+        if (targetProject.fundsWithdrawn == true) {
+            revert("Already withdrawn");
+        }
+
+        targetProject.fundsWithdrawn = true;
+
+        (bool sent, ) = targetProject.creator.call{value: targetProject.amountRaised}("");
         require(sent, "Failed to withdraw Ether");
     }
 }
