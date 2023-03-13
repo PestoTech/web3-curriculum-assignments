@@ -39,12 +39,14 @@ contract Voting {
     }
 
     function stopVoting() _onlyAdmin public {
+        require(isOpen, "Voting has already ended");
         isOpen = false;
         emit DeclareWinner(leadingCandidate, leadingVotes);
     }
 
     function vote(address _to) public {
-        require(isOpen, "Voting has not started");
+        require(isOpen, "Voting has not started or already ended");
+        require(voters[msg.sender] == false, "Already voted");
         voters[msg.sender] = true;
         CandidateInfo storage candidate = candidates[_to];
         candidate.votes += 1;
