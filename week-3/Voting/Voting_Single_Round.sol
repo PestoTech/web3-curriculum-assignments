@@ -7,6 +7,7 @@ contract Voting {
     struct CandidateInfo {
         string name;
         uint votes;
+        bool isRegistered;
     }
 
     mapping(address => bool) public voters;
@@ -30,7 +31,8 @@ contract Voting {
 
     function registerCandidate(string calldata _name) public {
         require(!isOpen, "Voting has already started");
-        candidates[msg.sender] = CandidateInfo(_name, 0);
+        require(!candidates[msg.sender].isRegistered, "Candidate already registered");
+        candidates[msg.sender] = CandidateInfo(_name, 0, true);
     }
 
     function startVoting() _onlyAdmin public {
@@ -46,6 +48,7 @@ contract Voting {
 
     function vote(address _to) public {
         require(isOpen, "Voting has not started or already ended");
+        require(candidates[_to].isRegistered, "Not a candidate for voting");
         require(voters[msg.sender] == false, "Already voted");
         voters[msg.sender] = true;
         CandidateInfo storage candidate = candidates[_to];
