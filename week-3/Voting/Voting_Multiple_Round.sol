@@ -73,7 +73,7 @@ contract Voting {
         
         VotingRound storage targetRound = votingRounds[roundNumber];
 
-        if (candidate.votes > targetRound.leadingVotes && targetRound.leadingCandidate != _to) {
+        if (candidate.votes > targetRound.leadingVotes) {
             targetRound.leadingVotes = candidate.votes;
             targetRound.leadingCandidate = _to;
         }
